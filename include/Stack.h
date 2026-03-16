@@ -8,15 +8,19 @@ typedef struct Stack {
   size_t count;
   size_t original_capacity;
   size_t capacity;
-  int *data;
-} stack_t;
+  void **data;
+} int_stack_t;
 
-stack_t *stack_new(size_t capacity);
+int_stack_t *stack_new(size_t capacity);
 
-void stack_push(stack_t *stack, int screen_index);
-int stack_pop(stack_t *stack);
+void stack_push(int_stack_t *stack, void *item);
+void *stack_pop(int_stack_t *stack);
 
-void stack_clear(stack_t *stack);
+// Int specialization functions
+void stack_push_int(int_stack_t *stack, int value);
+int stack_pop_int(int_stack_t *stack);
 
-void stack_free(stack_t *stack);
-void stack_remove_nulls(stack_t *stack);
+void stack_clear(int_stack_t **stack);
+
+void stack_free(int_stack_t *stack);
+void stack_remove_nulls(int_stack_t *stack);

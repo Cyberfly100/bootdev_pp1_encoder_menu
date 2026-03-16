@@ -5,6 +5,8 @@
 
 class MenuNavigator {
 public:
+    MenuNavigator();
+    ~MenuNavigator();
     void init(const menu_screen_t* screens, uint8_t screen_count);
     void onRotate(int8_t delta);
     void onConfirm();
@@ -19,7 +21,7 @@ private:
     bool _active;
     const menu_screen_t* _screens;
     uint8_t _screen_count;
-    stack_t* _stack;
+    int_stack_t* _stack;
     uint8_t _current_screen_index;
     uint8_t _cursor;
     bool _editing;

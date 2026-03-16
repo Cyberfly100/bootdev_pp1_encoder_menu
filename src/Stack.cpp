@@ -1,23 +1,23 @@
 #include "Stack.h"
 
-void stack_push(stack_t *stack, int screen_index) {
+void stack_push(int_stack_t *stack, void *item) {
   if (stack->count == stack->capacity) {
     // Double stack capacity to avoid reallocing often
     stack->capacity *= 2;
-    stack->data = (int *)realloc(stack->data, stack->capacity * sizeof(int));
+    stack->data = (void **)realloc(stack->data, stack->capacity * sizeof(void *));
     if (stack->data == NULL) {
       // Unable to realloc, just exit :) get gud
       exit(1);
     }
   }
 
-  stack->data[stack->count] = screen_index;
+  stack->data[stack->count] = item;
   stack->count++;
 
   return;
 }
 
-int stack_pop(stack_t *stack) {
+void *stack_pop(int_stack_t *stack) {
   if (stack->count == 0) {
     return NULL;
   }
@@ -26,26 +26,32 @@ int stack_pop(stack_t *stack) {
   return stack->data[stack->count];
 }
 
-void stack_free(stack_t *stack) {
+void stack_free(int_stack_t *stack) {
   if (stack == NULL) {
     return;
   }
 
   if (stack->data != NULL) {
+    // Free the allocated contents
+    for (size_t i = 0; i < stack->count; i++) {
+      if (stack->data[i] != NULL) {
+        free(stack->data[i]);
+      }
+    }
     free(stack->data);
   }
 
   free(stack);
 }
 
-void stack_clear(stack_t *stack) {
-  stack_t *old_stack = stack;
-  stack = stack_new(old_stack->original_capacity);
+void stack_clear(int_stack_t **stack) {
+  int_stack_t *old_stack = *stack;
+  *stack = stack_new(old_stack->original_capacity);
   stack_free(old_stack);
 }
 
 
-void stack_remove_nulls(stack_t *stack) {
+void stack_remove_nulls(int_stack_t *stack) {
   size_t new_count = 0;
 
   // Iterate through the stack and compact non-NULL pointers.
@@ -64,8 +70,29 @@ void stack_remove_nulls(stack_t *stack) {
   }
 }
 
-stack_t *stack_new(size_t capacity) {
-  stack_t *stack = (stack_t *)malloc(sizeof(stack_t));
+void stack_push_int(int_stack_t *stack, int value) {
+  int *p = (int *)malloc(sizeof(int));
+  if (p == NULL) {
+    // Unable to allocate, exit
+    exit(1);
+  }
+  *p = value;
+  stack_push(stack, p);
+}
+
+int stack_pop_int(int_stack_t *stack) {
+  void *p = stack_pop(stack);
+  if (p == NULL) {
+    // Stack was empty, return 0 as error (though usage should prevent this)
+    return 0;
+  }
+  int value = *(int *)p;
+  free(p);
+  return value;
+}
+
+int_stack_t *stack_new(size_t capacity) {
+  int_stack_t *stack = (int_stack_t *)malloc(sizeof(int_stack_t));
   if (stack == NULL) {
     return NULL;
   }
@@ -73,7 +100,7 @@ stack_t *stack_new(size_t capacity) {
   stack->count = 0;
   stack->capacity = capacity;
   stack->original_capacity = capacity;
-  stack->data = (int *)malloc(stack->capacity * sizeof(int));
+  stack->data = (void **)malloc(stack->capacity * sizeof(void *));
   if (stack->data == NULL) {
     free(stack);
     return NULL;

@@ -1,5 +1,14 @@
 #include <MenuNavigator.h>
 
+MenuNavigator::MenuNavigator() : _stack(NULL) {}
+
+MenuNavigator::~MenuNavigator() {
+    if (_stack != NULL) {
+        stack_free(_stack);
+        _stack = NULL;
+    }
+}
+
 void MenuNavigator::init(const menu_screen_t* screens, uint8_t screen_count){
     _active = false;
     _screens = screens;
@@ -10,7 +19,7 @@ void MenuNavigator::init(const menu_screen_t* screens, uint8_t screen_count){
     _editing = false;
     _edit_temp = 0;
     _dirty = true; // Initial draw needed
-    stack_push(_stack, _current_screen_index);
+    stack_push_int(_stack, _current_screen_index);
 }
 
 void MenuNavigator::onRotate(int8_t delta) {
@@ -53,7 +62,7 @@ void MenuNavigator::onConfirm() {
             }
             break;
         case MENU_ITEM_TYPE_NAVIGATE:
-            stack_push(_stack, _current_screen_index);
+            stack_push_int(_stack, _current_screen_index);
             _current_screen_index = current_item->target.target_screen;
             _cursor = 0;
             _dirty = true;
@@ -83,7 +92,7 @@ void MenuNavigator::onBack() {
         _editing = false;
         _dirty = true;
     } else if (_stack->count > 0) {
-        _current_screen_index = stack_pop(_stack);
+        _current_screen_index = stack_pop_int(_stack);
         _cursor = 0;
         _dirty = true;
 
@@ -118,8 +127,8 @@ void MenuNavigator::setActive(bool active) {
         _editing = false;
         _current_screen_index = 0;
         _edit_temp = 0;
-        stack_clear(_stack);
-        stack_push(_stack, _current_screen_index);
+        stack_clear(&_stack);
+        stack_push_int(_stack, _current_screen_index);
     }
     _active = active;
 
