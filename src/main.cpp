@@ -2,6 +2,7 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <MenuItem.h>
+#include <esp32-hal-log.h>
 
 #define LINE_SPACING_PX 3
 #define FONT_HEIGHT_PX 13
@@ -12,38 +13,62 @@ uint32_t last_draw = millis();
 
 static uint8_t cursor = 0;
 int temp = 437;
-int time_m = 1200;
+int time_m = 120;
 int hold_temp = 400;
-int hold_time = 600;
+int hold_time = 60;
 
 menu_item_t menu_items[] = {
-  {"Temp.", MENU_ITEM_TYPE_VALUE},
-  {"Time", MENU_ITEM_TYPE_VALUE},
-  {"Hold temp.", MENU_ITEM_TYPE_VALUE},
-  {"Hold time", MENU_ITEM_TYPE_VALUE}
+  {"Temp.", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TEMP},
+  {"Time", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TIME},
+  {"Hold temp.", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TEMP},
+  {"Hold time", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TIME}
 };
 
 menu_screen_t main_screen = {
   .id = 0,
   .title = "Main Menu",
-  .items = menu_items,
+  .items = const_cast<menu_item_t*>(menu_items),
   .item_count = sizeof(menu_items) / sizeof(menu_item_t)
 };
 
-void drawTitle(menu_screen_t screen) {
+void drawTitle(const menu_screen_t *screen) {
   u8g2.setFont(u8g2_font_t0_13b_tf);
-  u8g2.drawUTF8(0,FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX, screen.title);
+  u8g2.drawUTF8(0,FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX, screen->title);
   u8g2.drawLine(0, FONT_HEIGHT_PX + 1, 128, FONT_HEIGHT_PX + 1);
 }
 
-void drawItem(menu_item_t item, bool selected, uint8_t line) {
+void drawItem(const menu_item_t *item, bool selected, uint8_t line) {
   u8g2.setFont(u8g2_font_t0_13b_tf);
-  u8g2.drawUTF8(8, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, item.label);
-  if (item.type == MENU_ITEM_TYPE_VALUE) {
-    char value_str[10];
-    dtostrf(*(item.target.value_ptr)/10.0, 0, 1, value_str);
+  u8g2.drawUTF8(8, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, item->label);
+  if (item->type == MENU_ITEM_TYPE_VALUE) {
+    char value_str[15];
+    switch (item->value_type) {
+      case VALUE_TYPE_TEMP: {
+        // sprintf(value_str, "%s", "temp");
+        sprintf(value_str, "%.1f°C", *(item->target.value_ptr) / 10.0);
+        break;
+      }
+      case VALUE_TYPE_TEXT: {
+        // sprintf(value_str, "%s", "text");
+        strncpy(value_str, (char*)item->target.value_ptr, sizeof(value_str)-1);
+        value_str[sizeof(value_str)-1] = '\0';
+        break;
+      }
+      case VALUE_TYPE_TIME: {
+        // sprintf(value_str, "%s", "time");
+        int hours = *(item->target.value_ptr) / 60;
+        int minutes = *(item->target.value_ptr) % 60;
+        sprintf(value_str, "%02dh%02dm", hours, minutes);
+        break;
+      }
+       default: {
+        // sprintf(value_str, "%s", "def");
+        sprintf(value_str, "%d", *(item->target.value_ptr));
+        break;
+      }
+    }
     u8g2.drawUTF8(128 - u8g2.getUTF8Width(value_str), (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, value_str);
-  }
+    }
   if (selected) {
     u8g2.setFont(u8g2_font_unifont_t_symbols);
     u8g2.drawGlyph(0, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 1, 0x25b6);
@@ -52,19 +77,19 @@ void drawItem(menu_item_t item, bool selected, uint8_t line) {
   }
 }
 
-void drawScreen(menu_screen_t screen, uint8_t cursor) {
+void drawScreen(const menu_screen_t *screen, uint8_t cursor) {
   drawTitle(screen);
-  if (cursor == screen.item_count-1) {
-    drawItem(screen.items[screen.item_count-3], false, 1);
-    drawItem(screen.items[screen.item_count-2], false, 2);
-    drawItem(screen.items[screen.item_count-1], true, 3);
+  if (cursor == screen->item_count-1) {
+    drawItem(&(screen->items[screen->item_count-3]), false, 1);
+    drawItem(&(screen->items[screen->item_count-2]), false, 2);
+    drawItem(&(screen->items[screen->item_count-1]), true, 3);
   } else if (cursor == 0) {
-    drawItem(screen.items[0], true, 1);
-    drawItem(screen.items[1], false, 2);
-    drawItem(screen.items[2], false, 3);
+    drawItem(&(screen->items[0]), true, 1);
+    drawItem(&(screen->items[1]), false, 2);
+    drawItem(&(screen->items[2]), false, 3);
   } else {
     for (int i = 0; i < 3; i++) {
-      drawItem(screen.items[cursor+i-1], i == 1, i+1);
+      drawItem(&(screen->items[cursor+i-1]), i == 1, i+1);
     }
   }
 }
@@ -77,6 +102,7 @@ void setup() {
 
   u8g2.setI2CAddress(0x7A);
   u8g2.begin();
+  Serial.begin(115200);
 }
 
 void loop() {
@@ -84,7 +110,7 @@ void loop() {
   if (now - last_draw > 1500) {
     last_draw = now;
     u8g2.clearBuffer();
-    drawScreen(main_screen, cursor);
+    drawScreen(&main_screen, cursor);
     u8g2.sendBuffer();
     cursor = (cursor + 1) % main_screen.item_count;
   }
