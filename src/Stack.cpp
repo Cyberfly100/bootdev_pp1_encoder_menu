@@ -1,6 +1,9 @@
 #include "Stack.h"
 
 void stack_push(int_stack_t *stack, void *item) {
+  if (stack == NULL) {
+    return;
+  }
   if (stack->count == stack->capacity) {
     // Double stack capacity to avoid reallocing often
     stack->capacity *= 2;

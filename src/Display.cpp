@@ -100,7 +100,7 @@ void DisplayRenderer::drawTitle(const menu_screen_t* screen) {
     title = screen->title;
   }
   _display.drawUTF8(0,FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX, title);
-  _display.drawLine(0, FONT_HEIGHT_PX + 1, 128, FONT_HEIGHT_PX + 1);
+  _display.drawLine(0, FONT_HEIGHT_PX + 1, _display.getWidth(), FONT_HEIGHT_PX + 1);
 }
 
 void DisplayRenderer::drawItem(const menu_item_t* item, uint8_t line, bool selected, bool editing) {
@@ -116,6 +116,7 @@ void DisplayRenderer::drawItem(const menu_item_t* item, uint8_t line, bool selec
   uint8_t string_width = 0;
   char value_str[MAX_STRING_LENGTH + 1] = {0};
   int value = 0;
+  u8g2_uint_t display_width = _display.getWidth();
   switch (item->type) {
     case MENU_ITEM_TYPE_VALUE:
       if (item->target.value.int_value) {
@@ -128,7 +129,7 @@ void DisplayRenderer::drawItem(const menu_item_t* item, uint8_t line, bool selec
       // } else if (item->value_type_info && item->value_type_info->value_type == VALUE_TYPE_TEXT) {
       //   string_width = _display.getStrWidth("A")* (MAX_STRING_LENGTH - 1);
       }
-      _display.drawUTF8(128 - string_width, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, value_str);
+      _display.drawUTF8(display_width - string_width, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, value_str);
       break;
     case MENU_ITEM_TYPE_NAVIGATE:
       break;
@@ -147,21 +148,21 @@ void DisplayRenderer::drawItem(const menu_item_t* item, uint8_t line, bool selec
         
         switch (item->value_type_info->value_type) {
             case VALUE_TYPE_TEMP:
-                box_x = 128 - string_width;
+                box_x = display_width - string_width;
                 box_width = string_width;
                 break;
             case VALUE_TYPE_TIME:
                 box_width = _display.getStrWidth("00") - 1;
                 if (_navigator.getEditPosition() == 0) {
-                    box_x = 128 - string_width;
+                    box_x = display_width - string_width;
                 } else {
-                    box_x = 128 - string_width + _display.getStrWidth("00h") - 3;
+                    box_x = display_width - string_width + _display.getStrWidth("00h") - 3;
                 }
                 break;
             case VALUE_TYPE_TEXT:
                 char current_char[2] = {_navigator.getEditText()[_navigator.getEditPosition()], '\0'};
                 box_width = _display.getStrWidth(current_char);
-                box_x = 128 - string_width + this->getStrWidth(_navigator.getEditText(), _navigator.getEditPosition());
+                box_x = display_width - string_width + this->getStrWidth(_navigator.getEditText(), _navigator.getEditPosition());
                 break;
         }
         
@@ -171,7 +172,7 @@ void DisplayRenderer::drawItem(const menu_item_t* item, uint8_t line, bool selec
       }
     }
     _display.setDrawColor(2);
-    _display.drawBox(0, (line) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 1 , 128, FONT_HEIGHT_PX + LINE_SPACING_PX - 1);
+    _display.drawBox(0, (line) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 1 , display_width, FONT_HEIGHT_PX + LINE_SPACING_PX - 1);
     _display.setDrawColor(1);
   }
 }

@@ -7,10 +7,6 @@
 #include <Display.h>
 #include <Encoder.h>
 
-// #define LINE_SPACING_PX 3
-// #define FONT_HEIGHT_PX 13
-// #define FONT_GLYPH_LEG_PX 2
-
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, 4, 3);
 
 MenuNavigator navigator;
@@ -135,9 +131,5 @@ void loop() {
     } else if (!navigator.isActive()) {
       displayRenderer.renderHome(live_temp, temp, time_m, (int)round(millis()/1000/60));
     }
-    // u8g2.clearBuffer();
-    // drawScreen(&main_screen, cursor);
-    // u8g2.sendBuffer();
-    // cursor = (cursor + 1) % main_screen.item_count;
   }
 }

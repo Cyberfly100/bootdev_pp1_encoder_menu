@@ -27,7 +27,6 @@ void MenuNavigator::init(const menu_screen_t* screens, uint8_t screen_count){
 }
 
 void MenuNavigator::onRotate(int8_t delta) {
-    log_i("MenuNavigator::onRotate delta=%d active=%d editing=%d cursor=%d", delta, _active, _editing, _cursor);
     if (delta == 0) {
         return;
     }
