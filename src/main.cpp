@@ -3,115 +3,141 @@
 #include <Wire.h>
 #include <MenuItem.h>
 #include <esp32-hal-log.h>
+#include <MenuNavigator.h>
+#include <Display.h>
+#include <Encoder.h>
 
-#define LINE_SPACING_PX 3
-#define FONT_HEIGHT_PX 13
-#define FONT_GLYPH_LEG_PX 2
+// #define LINE_SPACING_PX 3
+// #define FONT_HEIGHT_PX 13
+// #define FONT_GLYPH_LEG_PX 2
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, 4, 3);
+
+MenuNavigator navigator;
+DisplayRenderer displayRenderer(u8g2, navigator);
 uint32_t last_draw = millis();
 
-static uint8_t cursor = 0;
 int temp = 437;
 int time_m = 120;
 int hold_temp = 400;
 int hold_time = 60;
+char test_string[MAX_STRING_LENGTH + 1] = "name";
 
-menu_item_t menu_items[] = {
-  {"Temp.", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TEMP},
-  {"Time", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TIME},
-  {"Hold temp.", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TEMP},
-  {"Hold time", MENU_ITEM_TYPE_VALUE, VALUE_TYPE_TIME}
+
+menu_item_value_t text_value = {.text_value = test_string};
+
+menu_item_value_t temp_value = {.int_value = &temp};
+menu_item_value_t time_value = {.int_value = &time_m};
+menu_item_value_t hold_temp_value = {.int_value = &hold_temp};
+menu_item_value_t hold_time_value = {.int_value = &hold_time};
+
+const menu_item_t beef_steak_rare_params[] = {
+  {"Toggle light", MENU_ITEM_TYPE_ACTION, NULL, {.action = Encoder::toggle_light}},
+  {"Name", MENU_ITEM_TYPE_VALUE, &string_info, {.value = text_value}},
+  {"Temp.", MENU_ITEM_TYPE_VALUE, &temp_info, {.value = temp_value}},
+  {"Time", MENU_ITEM_TYPE_VALUE, &time_info, {.value = time_value}},
+  {"Hold temp.", MENU_ITEM_TYPE_VALUE, &temp_info, {.value = hold_temp_value}},
+  {"Hold time", MENU_ITEM_TYPE_VALUE, &time_info, {.value = hold_time_value}}
 };
 
-menu_screen_t main_screen = {
-  .id = 0,
-  .title = "Main Menu",
-  .items = const_cast<menu_item_t*>(menu_items),
-  .item_count = sizeof(menu_items) / sizeof(menu_item_t)
+const menu_item_t beef_steak_mediumrare_params[] = {
+  {"Temp.", MENU_ITEM_TYPE_VALUE, &temp_info, {.value = temp_value}},
+  {"Time", MENU_ITEM_TYPE_VALUE, &time_info, {.value = time_value}},
+  {"Hold temp.", MENU_ITEM_TYPE_VALUE, &temp_info, {.value = hold_temp_value}},
+  {"Hold time", MENU_ITEM_TYPE_VALUE, &time_info, {.value = hold_time_value}}
 };
 
-void drawTitle(const menu_screen_t *screen) {
-  u8g2.setFont(u8g2_font_t0_13b_tf);
-  u8g2.drawUTF8(0,FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX, screen->title);
-  u8g2.drawLine(0, FONT_HEIGHT_PX + 1, 128, FONT_HEIGHT_PX + 1);
-}
+const menu_item_t beef_steak_well_done_params[] = {
+  {"Temp.", MENU_ITEM_TYPE_VALUE, &temp_info, {.value = temp_value}},
+  {"Time", MENU_ITEM_TYPE_VALUE, &time_info, {.value = time_value}},
+  {"Hold temp.", MENU_ITEM_TYPE_VALUE, &temp_info, {.value = hold_temp_value}},
+  {"Hold time", MENU_ITEM_TYPE_VALUE, &time_info, {.value = hold_time_value}}
+};
 
-void drawItem(const menu_item_t *item, bool selected, uint8_t line) {
-  u8g2.setFont(u8g2_font_t0_13b_tf);
-  u8g2.drawUTF8(8, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, item->label);
-  if (item->type == MENU_ITEM_TYPE_VALUE) {
-    char value_str[15];
-    switch (item->value_type) {
-      case VALUE_TYPE_TEMP: {
-        // sprintf(value_str, "%s", "temp");
-        sprintf(value_str, "%.1f°C", *(item->target.value_ptr) / 10.0);
-        break;
-      }
-      case VALUE_TYPE_TEXT: {
-        // sprintf(value_str, "%s", "text");
-        strncpy(value_str, (char*)item->target.value_ptr, sizeof(value_str)-1);
-        value_str[sizeof(value_str)-1] = '\0';
-        break;
-      }
-      case VALUE_TYPE_TIME: {
-        // sprintf(value_str, "%s", "time");
-        int hours = *(item->target.value_ptr) / 60;
-        int minutes = *(item->target.value_ptr) % 60;
-        sprintf(value_str, "%02dh%02dm", hours, minutes);
-        break;
-      }
-       default: {
-        // sprintf(value_str, "%s", "def");
-        sprintf(value_str, "%d", *(item->target.value_ptr));
-        break;
-      }
-    }
-    u8g2.drawUTF8(128 - u8g2.getUTF8Width(value_str), (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 2, value_str);
-    }
-  if (selected) {
-    u8g2.setFont(u8g2_font_unifont_t_symbols);
-    u8g2.drawGlyph(0, (line + 1) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 1, 0x25b6);
-    u8g2.setDrawColor(2);
-    u8g2.drawBox(0, (line) * FONT_HEIGHT_PX - FONT_GLYPH_LEG_PX + (line + 1) * LINE_SPACING_PX - 1 , 128, FONT_HEIGHT_PX + LINE_SPACING_PX - 1);
-  }
-}
+const menu_item_t beef_steak_items[] = {
+  {"Beef steak rare", MENU_ITEM_TYPE_NAVIGATE, NULL, {.target_screen = SCR_BEEF_STEAK_RARE}},
+  {"Beef steak medium rare", MENU_ITEM_TYPE_NAVIGATE, NULL, {.target_screen = SCR_BEEF_STEAK_MEDIUM_RARE}},
+  {"Beef steak well done", MENU_ITEM_TYPE_NAVIGATE, NULL, {.target_screen = SCR_BEEF_STEAK_WELL_DONE}}
+};
 
-void drawScreen(const menu_screen_t *screen, uint8_t cursor) {
-  drawTitle(screen);
-  if (cursor == screen->item_count-1) {
-    drawItem(&(screen->items[screen->item_count-3]), false, 1);
-    drawItem(&(screen->items[screen->item_count-2]), false, 2);
-    drawItem(&(screen->items[screen->item_count-1]), true, 3);
-  } else if (cursor == 0) {
-    drawItem(&(screen->items[0]), true, 1);
-    drawItem(&(screen->items[1]), false, 2);
-    drawItem(&(screen->items[2]), false, 3);
-  } else {
-    for (int i = 0; i < 3; i++) {
-      drawItem(&(screen->items[cursor+i-1]), i == 1, i+1);
+const menu_item_t main_menu[] = {
+  {"Recipes", MENU_ITEM_TYPE_NAVIGATE, NULL, {.target_screen = SCR_RECIPES}}
+};
+
+menu_screen_t screens[SCREEN_COUNT] = {
+    [SCR_MAIN_MENU] = {
+        .title = "Main Menu",
+        .items = main_menu,
+        .item_count = sizeof(main_menu) / sizeof(menu_item_t)
+    },
+    [SCR_RECIPES] = {
+        .title = "Recipes",
+        .items = beef_steak_items,
+        .item_count = sizeof(beef_steak_items) / sizeof(menu_item_t)
+    },
+    [SCR_BEEF_STEAK_RARE] = {
+        .title = "Beef steak rare",
+        .items = beef_steak_rare_params,
+        .item_count = sizeof(beef_steak_rare_params) / sizeof(menu_item_t)
+    },
+    [SCR_BEEF_STEAK_MEDIUM_RARE] = {
+        .title = "Beef steak medium rare",
+        .items = beef_steak_mediumrare_params,
+        .item_count = sizeof(beef_steak_mediumrare_params) / sizeof(menu_item_t)
+    },
+    [SCR_BEEF_STEAK_WELL_DONE] = {
+        .title = "Beef steak well done",
+        .items = beef_steak_well_done_params,
+        .item_count = sizeof(beef_steak_well_done_params) / sizeof(menu_item_t)
     }
-  }
-}
+};
 
 void setup() {
-  menu_items[0].target.value_ptr = &temp;
-  menu_items[1].target.value_ptr = &time_m;
-  menu_items[2].target.value_ptr = &hold_temp;
-  menu_items[3].target.value_ptr = &hold_time;
-
-  u8g2.setI2CAddress(0x7A);
-  u8g2.begin();
+  navigator.init(screens, SCREEN_COUNT);
+  
   Serial.begin(115200);
+  Encoder::Setup();
+
+  displayRenderer.initialize();
+  displayRenderer.renderLogo();
+  delay(800);
 }
 
 void loop() {
+
+  Encoder::Control();
   uint32_t now = millis();
-  if (now - last_draw > 1500) {
+  if (now - last_draw > 100) {
     last_draw = now;
-    u8g2.clearBuffer();
-    drawScreen(&main_screen, cursor);
-    u8g2.sendBuffer();
-    cursor = (cursor + 1) % main_screen.item_count;
+
+    int live_temp = random(427, 447);
+
+    if (Encoder::get_encoder_delta() != 0) {
+      if (!navigator.isActive()) {
+        navigator.setActive(true);
+      } else {
+        navigator.onRotate(Encoder::get_encoder_delta());
+      }
+    }
+    Encoder::button_pressed_type_t button_press_type = Encoder::get_button_pressed();
+    switch (button_press_type) {
+      case Encoder::SHORT:
+        navigator.onConfirm();
+        break;
+      case Encoder::LONG:
+        navigator.onBack();
+        break;
+      default:
+        break;
+    }
+    if (navigator.isDirty() && navigator.isActive()) {
+      displayRenderer.renderMenu(navigator.getCurrentScreen());
+    } else if (!navigator.isActive()) {
+      displayRenderer.renderHome(live_temp, temp, time_m, (int)round(millis()/1000/60));
+    }
+    // u8g2.clearBuffer();
+    // drawScreen(&main_screen, cursor);
+    // u8g2.sendBuffer();
+    // cursor = (cursor + 1) % main_screen.item_count;
   }
 }

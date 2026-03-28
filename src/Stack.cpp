@@ -35,7 +35,11 @@ void stack_free(int_stack_t *stack) {
     // Free the allocated contents
     for (size_t i = 0; i < stack->count; i++) {
       if (stack->data[i] != NULL) {
-        free(stack->data[i]);
+        if (stack->type == STACK_TYPE_INT) {
+          free((int*)stack->data[i]);
+        } else {
+          free(stack->data[i]);
+        }
       }
     }
     free(stack->data);
@@ -45,8 +49,15 @@ void stack_free(int_stack_t *stack) {
 }
 
 void stack_clear(int_stack_t **stack) {
+  if (*stack == NULL) {
+    return;
+  }
   int_stack_t *old_stack = *stack;
-  *stack = stack_new(old_stack->original_capacity);
+  if ((*stack)->type == STACK_TYPE_INT) {
+    *stack = stack_new(old_stack->original_capacity, STACK_TYPE_INT);
+  } else {
+    *stack = stack_new(old_stack->original_capacity, STACK_TYPE_VOID_PTR);
+  }
   stack_free(old_stack);
 }
 
@@ -91,12 +102,12 @@ int stack_pop_int(int_stack_t *stack) {
   return value;
 }
 
-int_stack_t *stack_new(size_t capacity) {
+int_stack_t *stack_new(size_t capacity, stack_type_t type) {
   int_stack_t *stack = (int_stack_t *)malloc(sizeof(int_stack_t));
   if (stack == NULL) {
     return NULL;
   }
-
+  stack->type = type;
   stack->count = 0;
   stack->capacity = capacity;
   stack->original_capacity = capacity;

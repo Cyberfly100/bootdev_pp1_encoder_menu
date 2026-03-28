@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "EncoderMenu",
+			"path": "."
+		},
+		{
+			"name": "ButtonMatrix",
+			"path": "../ButtonMatrix"
+		}
+	],
+	"settings": {}
+}

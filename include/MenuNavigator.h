@@ -15,16 +15,23 @@ public:
     
     const menu_screen_t* getCurrentScreen() const;
     uint8_t getCursor() const;
+    void setCursor(uint8_t cursor);
+    uint8_t getEditPosition() const;
+    int getEditInt() const;
+    const char* getEditText() const;
     bool isEditingValue() const;
     void setActive(bool active);
+    bool isActive() const;
 private:
     bool _active;
+    int8_t _edit_position;
     const menu_screen_t* _screens;
     uint8_t _screen_count;
     int_stack_t* _stack;
     uint8_t _current_screen_index;
     uint8_t _cursor;
     bool _editing;
-    int _edit_temp;
+    int _edit_val_int;
+    char _edit_val_text[MAX_STRING_LENGTH + 1];
     bool _dirty; // redraw needed
 };
