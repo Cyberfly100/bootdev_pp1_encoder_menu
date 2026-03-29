@@ -11,15 +11,15 @@ Arduino leaning towards C.
 
 ### Usage
 This repo is an example of how the code can be used. Main.cpp sets up a few screens. The enum indexing these screens is in MenuItem.h. Each screen displays a title and an array of menu items which can have a mixture of the following types:
-- MENU_ITEM_TYPE_ACTION -> calls a function without return and parameters like void func().
-- MENU_ITEM_TYPE_NAVIGATE -> links to another screen.
-- MENU_ITEM_TYPE_VALUE -> displays and modifies a value of one of the following types
-    - VALUE_TYPE_INT
-    - VALUE_TYPE_TEMP
-    - VALUE_TYPE_TIME
-    - VALUE_TYPE_TEXT
+- `MENU_ITEM_TYPE_ACTION` -> calls a function without return and parameters like void func().
+- `MENU_ITEM_TYPE_NAVIGATE` -> links to another screen.
+- `MENU_ITEM_TYPE_VALUE` -> displays and modifies a value of one of the following types
+    - `VALUE_TYPE_INT`
+    - `VALUE_TYPE_TEMP`
+    - `VALUE_TYPE_TIME`
+    - `VALUE_TYPE_TEXT`
 
-Rendering happens on demand, when in the menu. A _dirty flag is set when anything has changed and the screen needs to be redrawn.
+Rendering happens on demand, when in the menu. A `_dirty` flag is set when anything has changed and the screen needs to be redrawn.
 
 There is also a home screen that is not part of the menu structure and can be used to display live updating information. In my example, turning the encoder enters the menu. This leaves the click of the encoder to do a common action, like start/stop a process. One could also use the direction of the turn to enter two different menu structures (e.g. ccw -> detailed process setup, cw -> select from previously set up processes).
 
