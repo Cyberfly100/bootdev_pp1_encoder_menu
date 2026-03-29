@@ -29,7 +29,7 @@ Short press on the encoder acts as confirm, long press as back. Long press trigg
 <img src="https://github.com/cyberfly100/bootdev_pp1_encoder_menu/blob/main/.github/mainmenu.jpg?raw=true" alt="Main Menu" width="200"/>
 <img src="https://github.com/cyberfly100/bootdev_pp1_encoder_menu/blob/main/.github/navigateitems.jpg?raw=true" alt="Navigate items" width="200"/>
 <img src="https://github.com/cyberfly100/bootdev_pp1_encoder_menu/blob/main/.github/menuitems.jpg?raw=true" alt="Menu items" width="200"/>
-<img src="ttps://github.com/cyberfly100/bootdev_pp1_encoder_menu/blob/main/.github/edittext.jpg?raw=true" alt="Edit text" width="200"/>
+<img src="https://github.com/cyberfly100/bootdev_pp1_encoder_menu/blob/main/.github/edittext.jpg?raw=true" alt="Edit text" width="200"/>
 
 ### Notes
 I used PlatformIO within VS Code to flash the board.
