@@ -35,6 +35,5 @@ Short press on the encoder acts as confirm, long press as back. Long press trigg
 I used PlatformIO within VS Code to flash the board.
 
 Things to improve in the future:
-- Time highlights do not fit perfectly and should probably adopt the text approch of dynamic string length checking.
 - MenuNavigator and Display are tightly coupled via MenuNavigators getters. 
 - add a generator that can convert an md file describing the menu structure into the screen array and menu items

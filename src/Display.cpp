@@ -152,11 +152,12 @@ void DisplayRenderer::drawItem(const menu_item_t* item, uint8_t line, bool selec
                 box_width = string_width;
                 break;
             case VALUE_TYPE_TIME:
-                box_width = _display.getStrWidth("00") - 1;
                 if (_navigator.getEditPosition() == 0) {
+                    box_width = this->getStrWidth(value_str, 2);
                     box_x = display_width - string_width;
                 } else {
-                    box_x = display_width - string_width + _display.getStrWidth("00h") - 3;
+                    box_width = this->getStrWidth(value_str, 5) - this->getStrWidth(value_str, 3);
+                    box_x = display_width - string_width + this->getStrWidth(value_str, 3);
                 }
                 break;
             case VALUE_TYPE_TEXT:
