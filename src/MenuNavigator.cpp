@@ -119,9 +119,7 @@ void MenuNavigator::onConfirm() {
             }
             if (_editing) {
                 if (current_item->value_type_info->value_type == VALUE_TYPE_TEXT) {
-                    if (current_item->target.value.text_value) {
-                        _edit_val_text[_edit_position] = (char)_edit_val_int;
-                    }
+                    _edit_val_text[_edit_position] = (char)_edit_val_int;
                 }
                 _edit_position++;
                 if (current_item->value_type_info->value_type == VALUE_TYPE_TEXT) {
@@ -175,9 +173,13 @@ void MenuNavigator::onConfirm() {
 void MenuNavigator::onBack() {
     if (_editing) {
         _edit_position--;
+        const menu_screen_t* current_screen = getCurrentScreen();
+        const menu_item_t* current_item = &current_screen->items[_cursor];
         if (_edit_position < 0) {
             _editing = false;
             _edit_position = 0;
+        } else if (current_item->value_type_info->value_type == VALUE_TYPE_TEXT) {
+            _edit_val_int = _edit_val_text[_edit_position];
         }
     } else if (_stack && _stack->count > 0) {
         _current_screen_index = stack_pop_int(_stack);
